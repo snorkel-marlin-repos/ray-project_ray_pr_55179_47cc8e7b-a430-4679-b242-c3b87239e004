@@ -23,8 +23,7 @@ from ray._private.test_utils import (
     reason="Fails on OSX: https://github.com/ray-project/ray/issues/30114",
 )
 @pytest.mark.parametrize("native", ["0", "1"])
-@pytest.mark.parametrize("node_info", ["node_id", "ip"])
-def test_profiler_endpoints(ray_start_with_dashboard, native, node_info):
+def test_profiler_endpoints(ray_start_with_dashboard, native):
     # Sanity check py-spy are installed.
     subprocess.check_call(["py-spy", "--version"])
 
@@ -46,19 +45,10 @@ def test_profiler_endpoints(ray_start_with_dashboard, native, node_info):
     pid = ray.get(a.getpid.remote())
     a.do_stuff_infinite.remote()
 
-    node_id = ray_start_with_dashboard.address_info["node_id"]
     node_ip = ray_start_with_dashboard.address_info["node_ip_address"]
 
-    def get_node_info():
-        if node_info == "node_id":
-            return f"node_id={node_id}"
-        else:
-            return f"ip={node_ip}"
-
     def get_actor_stack():
-        url = (
-            f"{webui_url}/worker/traceback?pid={pid}&{get_node_info()}&native={native}"
-        )
+        url = f"{webui_url}/worker/traceback?pid={pid}&ip={node_ip}&native={native}"
         print("GET URL", url)
         response = requests.get(url)
         print("STATUS CODE", response.status_code)
@@ -83,7 +73,7 @@ def test_profiler_endpoints(ray_start_with_dashboard, native, node_info):
 
     def get_actor_flamegraph():
         response = requests.get(
-            f"{webui_url}/worker/cpu_profile?pid={pid}&{get_node_info()}&native={native}"
+            f"{webui_url}/worker/cpu_profile?pid={pid}&ip={node_ip}&native={native}"
         )
         response.raise_for_status()
         assert response.headers["Content-Type"] == "image/svg+xml", response.headers
@@ -116,8 +106,7 @@ def test_profiler_endpoints(ray_start_with_dashboard, native, node_info):
     reason="Fails on OSX, requires memray & lldb installed in osx image",
 )
 @pytest.mark.parametrize("leaks", ["0", "1"])
-@pytest.mark.parametrize("node_info", ["node_id", "ip"])
-def test_memory_profiler_endpoint(ray_start_with_dashboard, leaks, node_info):
+def test_memory_profiler_endpoint(ray_start_with_dashboard, leaks):
     # Sanity check memray are installed.
     subprocess.check_call(["memray", "--version"])
 
@@ -139,18 +128,11 @@ def test_memory_profiler_endpoint(ray_start_with_dashboard, leaks, node_info):
     pid = ray.get(a.getpid.remote())
     a.do_stuff_infinite.remote()
 
-    node_id = ray_start_with_dashboard.address_info["node_id"]
     node_ip = ray_start_with_dashboard.address_info["node_ip_address"]
-
-    def get_node_info():
-        if node_info == "node_id":
-            return f"node_id={node_id}"
-        else:
-            return f"ip={node_ip}"
 
     def get_actor_memory_flamegraph():
         response = requests.get(
-            f"{webui_url}/memory_profile?pid={pid}&{get_node_info()}&leaks={leaks}&duration=5"
+            f"{webui_url}/memory_profile?pid={pid}&ip={node_ip}&leaks={leaks}&duration=5"
         )
         response.raise_for_status()
 
@@ -174,7 +156,7 @@ def test_memory_profiler_endpoint(ray_start_with_dashboard, leaks, node_info):
 
     def get_actor_memory_multiple_flamegraphs():
         response = requests.get(
-            f"{webui_url}/memory_profile?pid={pid}&{get_node_info()}&leaks={leaks}&duration=5"
+            f"{webui_url}/memory_profile?pid={pid}&ip={node_ip}&leaks={leaks}&duration=5"
         )
         response.raise_for_status()
 
@@ -207,8 +189,7 @@ def test_memory_profiler_endpoint(ray_start_with_dashboard, leaks, node_info):
     sys.platform == "darwin",
     reason="Fails on OSX, requires memray & lldb installed in osx image",
 )
-@pytest.mark.parametrize("node_info", ["node_id", "ip"])
-def test_profiler_failure_message(ray_start_with_dashboard, node_info):
+def test_profiler_failure_message(ray_start_with_dashboard):
     # Sanity check py-spy and memray is installed.
     subprocess.check_call(["py-spy", "--version"])
     subprocess.check_call(["memray", "--version"])
@@ -231,19 +212,10 @@ def test_profiler_failure_message(ray_start_with_dashboard, node_info):
     pid = ray.get(a.getpid.remote())
     a.do_stuff_infinite.remote()
 
-    node_id = ray_start_with_dashboard.address_info["node_id"]
     node_ip = ray_start_with_dashboard.address_info["node_ip_address"]
 
-    def get_node_info():
-        if node_info == "node_id":
-            return f"node_id={node_id}"
-        else:
-            return f"ip={node_ip}"
-
     def get_actor_stack():
-        response = requests.get(
-            f"{webui_url}/worker/traceback?pid={pid}&{get_node_info()}"
-        )
+        response = requests.get(f"{webui_url}/worker/traceback?pid={pid}&ip={node_ip}")
         response.raise_for_status()
         content = response.content.decode("utf-8")
         print("CONTENT", content)
@@ -258,42 +230,33 @@ def test_profiler_failure_message(ray_start_with_dashboard, node_info):
     )
 
     # Check we return the right status code and error message on failure.
-    response = requests.get(
-        f"{webui_url}/worker/traceback?pid=1234567&{get_node_info()}"
-    )
+    response = requests.get(f"{webui_url}/worker/traceback?pid=1234567&ip={node_ip}")
     content = response.content.decode("utf-8")
     print(content)
     assert "text/plain" in response.headers["Content-Type"], response.headers
     assert "Failed to execute" in content, content
 
     # Check we return the right status code and error message on failure.
-    response = requests.get(
-        f"{webui_url}/worker/cpu_profile?pid=1234567&{get_node_info()}"
-    )
+    response = requests.get(f"{webui_url}/worker/cpu_profile?pid=1234567&ip={node_ip}")
     content = response.content.decode("utf-8")
     print(content)
     assert "text/plain" in response.headers["Content-Type"], response.headers
     assert "Failed to execute" in content, content
 
     # Check we return the right status code and error message on failure.
-    response = requests.get(f"{webui_url}/memory_profile?pid=1234567&{get_node_info()}")
+    response = requests.get(f"{webui_url}/memory_profile?pid=1234567&ip={node_ip}")
     content = response.content.decode("utf-8")
     print(content)
     assert "text/plain" in response.headers["Content-Type"], response.headers
     assert "Failed to execute" in content, content
 
-    # Check wrong ID/ip failure
-    if node_info == "node_id":
-        wrong_param = "node_id=DUMMY_ID"
-        expect_msg = "Failed to execute: no agent address found for node DUMMY_ID"
-    else:
-        wrong_param = "ip=1.2.3.4"
-        expect_msg = "Failed to execute: no agent address found for node IP 1.2.3.4"
-
-    response = requests.get(f"{webui_url}/memory_profile?pid=1234567&{wrong_param}")
+    # Check wrong ip failure
+    response = requests.get(f"{webui_url}/memory_profile?pid=1234567&ip=1.2.3.4")
     content = response.content.decode("utf-8")
     print(content)
-    assert expect_msg in content, content
+    assert (
+        "Failed to execute: no agent address found for node IP 1.2.3.4" in content
+    ), content
 
 
 if __name__ == "__main__":

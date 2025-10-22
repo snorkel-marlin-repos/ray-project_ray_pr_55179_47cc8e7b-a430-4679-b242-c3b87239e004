@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ray/stats/tag_defs.h"
+#include "ray/stats/metric.h"
 
 namespace ray {
 namespace stats {

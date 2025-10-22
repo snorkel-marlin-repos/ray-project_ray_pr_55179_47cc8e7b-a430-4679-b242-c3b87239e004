@@ -14,13 +14,11 @@
 
 #pragma once
 
-#include "ray/observability/metric_interface.h"
-
 /// The definitions of tag keys that you can use every where.
 /// You can follow these examples to define and register your tag keys.
 
-namespace ray {
-namespace stats {
+using TagKeyType = opencensus::tags::TagKey;
+using TagsType = std::vector<std::pair<opencensus::tags::TagKey, std::string>>;
 
 extern const TagKeyType ComponentKey;
 
@@ -68,6 +66,3 @@ constexpr char kObjectUnsealed[] = "UNSEALED";
 // GCS task manager tags
 constexpr char kGcsTaskStatusEventDropped[] = "STATUS_EVENT";
 constexpr char kGcsProfileEventDropped[] = "PROFILE_EVENT";
-
-}  // namespace stats
-}  // namespace ray

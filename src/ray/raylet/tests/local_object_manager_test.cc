@@ -229,12 +229,11 @@ class MockIOWorker : public MockWorker {
   MockIOWorker(WorkerID worker_id,
                int port,
                std::shared_ptr<rpc::CoreWorkerClientInterface> io_worker)
-      : MockWorker(worker_id, port), io_worker_(io_worker) {}
+      : MockWorker(worker_id, port), io_worker(io_worker) {}
 
-  rpc::CoreWorkerClientInterface *rpc_client() { return io_worker_.get(); }
+  rpc::CoreWorkerClientInterface *rpc_client() { return io_worker.get(); }
 
- private:
-  std::shared_ptr<rpc::CoreWorkerClientInterface> io_worker_;
+  std::shared_ptr<rpc::CoreWorkerClientInterface> io_worker;
 };
 
 class MockIOWorkerPool : public IOWorkerPoolInterface {

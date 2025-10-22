@@ -775,17 +775,7 @@ class PrometheusServiceDiscoveryWriter(threading.Thread):
         ray._private.state.state._initialize_global_state(gcs_client_options)
         self.temp_dir = temp_dir
         self.default_service_discovery_flush_period = 5
-
-        # The last service discovery content that PrometheusServiceDiscoveryWriter has seen
-        self.latest_service_discovery_content = []
-        self._content_lock = threading.RLock()
-
         super().__init__()
-
-    def get_latest_service_discovery_content(self):
-        """Return the latest stored service discovery content."""
-        with self._content_lock:
-            return self.latest_service_discovery_content
 
     def get_file_discovery_content(self):
         """Return the content for Prometheus service discovery."""
@@ -802,10 +792,9 @@ class PrometheusServiceDiscoveryWriter(threading.Thread):
         dashboard_addr = gcs_client.internal_kv_get(b"DashboardMetricsAddress", None)
         if dashboard_addr:
             metrics_export_addresses.append(dashboard_addr.decode("utf-8"))
-        content = [{"labels": {"job": "ray"}, "targets": metrics_export_addresses}]
-        with self._content_lock:
-            self.latest_service_discovery_content = content
-        return json.dumps(content)
+        return json.dumps(
+            [{"labels": {"job": "ray"}, "targets": metrics_export_addresses}]
+        )
 
     def write(self):
         # Write a file based on https://prometheus.io/docs/guides/file-sd/

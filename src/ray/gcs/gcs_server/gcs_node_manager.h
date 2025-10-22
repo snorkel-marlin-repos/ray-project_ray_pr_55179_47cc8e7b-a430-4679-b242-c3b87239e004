@@ -21,21 +21,17 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "ray/common/asio/instrumented_io_context.h"
 #include "ray/common/id.h"
 #include "ray/gcs/gcs_server/gcs_init_data.h"
 #include "ray/gcs/gcs_server/gcs_table_storage.h"
-#include "ray/gcs/gcs_server/grpc_service_interfaces.h"
 #include "ray/gcs/pubsub/gcs_pub_sub.h"
+#include "ray/rpc/gcs/gcs_rpc_server.h"
 #include "ray/rpc/node_manager/raylet_client_pool.h"
-#include "ray/stats/metric_defs.h"
 #include "ray/util/event.h"
-#include "src/ray/protobuf/autoscaler.pb.h"
 #include "src/ray/protobuf/gcs.pb.h"
 #include "src/ray/protobuf/ray_syncer.pb.h"
 
-namespace ray {
-namespace gcs {
+namespace ray::gcs {
 
 class GcsAutoscalerStateManagerTest;
 class GcsStateTest;
@@ -43,14 +39,14 @@ class GcsStateTest;
 /// GcsNodeManager is responsible for managing and monitoring nodes as well as handing
 /// node and resource related rpc requests.
 /// This class is not thread-safe.
-class GcsNodeManager : public rpc::NodeInfoGcsServiceHandler {
+class GcsNodeManager : public rpc::NodeInfoHandler {
  public:
   /// Create a GcsNodeManager.
   ///
   /// \param gcs_publisher GCS message publisher.
   /// \param gcs_table_storage GCS table external storage accessor.
   GcsNodeManager(GcsPublisher *gcs_publisher,
-                 GcsTableStorage *gcs_table_storage,
+                 gcs::GcsTableStorage *gcs_table_storage,
                  instrumented_io_context &io_context,
                  rpc::RayletClientPool *raylet_client_pool,
                  const ClusterID &cluster_id);
@@ -264,7 +260,7 @@ class GcsNodeManager : public rpc::NodeInfoGcsServiceHandler {
   /// A publisher for publishing gcs messages.
   GcsPublisher *gcs_publisher_;
   /// Storage for GCS tables.
-  GcsTableStorage *gcs_table_storage_;
+  gcs::GcsTableStorage *gcs_table_storage_;
   instrumented_io_context &io_context_;
   /// Raylet client pool.
   rpc::RayletClientPool *raylet_client_pool_;
@@ -293,5 +289,4 @@ class GcsNodeManager : public rpc::NodeInfoGcsServiceHandler {
   friend GcsStateTest;
 };
 
-}  // namespace gcs
-}  // namespace ray
+}  // namespace ray::gcs

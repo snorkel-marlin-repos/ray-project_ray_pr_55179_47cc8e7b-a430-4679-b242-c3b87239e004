@@ -24,7 +24,6 @@ AIR_TRAINERS = {
 
 TRAIN_V2_TRAINERS = {
     "DataParallelTrainer",
-    "JaxTrainer",
     "LightGBMTrainer",
     "TensorflowTrainer",
     "TorchTrainer",

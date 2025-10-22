@@ -10,7 +10,7 @@ import com.google.protobuf.util.JsonFormat;
 import io.ray.api.exception.RuntimeEnvException;
 import io.ray.api.runtimeenv.RuntimeEnv;
 import io.ray.api.runtimeenv.RuntimeEnvConfig;
-import io.ray.runtime.generated.RuntimeEnvironment;
+import io.ray.runtime.generated.RuntimeEnvCommon;
 import java.io.IOException;
 
 public class RuntimeEnvImpl implements RuntimeEnv {
@@ -100,7 +100,7 @@ public class RuntimeEnvImpl implements RuntimeEnv {
 
   @Override
   public String serializeToRuntimeEnvInfo() throws RuntimeEnvException {
-    RuntimeEnvironment.RuntimeEnvInfo protoRuntimeEnvInfo = GenerateRuntimeEnvInfo();
+    RuntimeEnvCommon.RuntimeEnvInfo protoRuntimeEnvInfo = GenerateRuntimeEnvInfo();
 
     JsonFormat.Printer printer = JsonFormat.printer();
     try {
@@ -123,15 +123,15 @@ public class RuntimeEnvImpl implements RuntimeEnv {
     return get(CONFIG_FIELD_NAME, RuntimeEnvConfig.class);
   }
 
-  public RuntimeEnvironment.RuntimeEnvInfo GenerateRuntimeEnvInfo() throws RuntimeEnvException {
+  public RuntimeEnvCommon.RuntimeEnvInfo GenerateRuntimeEnvInfo() throws RuntimeEnvException {
     String serializeRuntimeEnv = serialize();
-    RuntimeEnvironment.RuntimeEnvInfo.Builder protoRuntimeEnvInfoBuilder =
-        RuntimeEnvironment.RuntimeEnvInfo.newBuilder();
+    RuntimeEnvCommon.RuntimeEnvInfo.Builder protoRuntimeEnvInfoBuilder =
+        RuntimeEnvCommon.RuntimeEnvInfo.newBuilder();
     protoRuntimeEnvInfoBuilder.setSerializedRuntimeEnv(serializeRuntimeEnv);
     RuntimeEnvConfig runtimeEnvConfig = getConfig();
     if (runtimeEnvConfig != null) {
-      RuntimeEnvironment.RuntimeEnvConfig.Builder protoRuntimeEnvConfigBuilder =
-          RuntimeEnvironment.RuntimeEnvConfig.newBuilder();
+      RuntimeEnvCommon.RuntimeEnvConfig.Builder protoRuntimeEnvConfigBuilder =
+          RuntimeEnvCommon.RuntimeEnvConfig.newBuilder();
       protoRuntimeEnvConfigBuilder.setSetupTimeoutSeconds(
           runtimeEnvConfig.getSetupTimeoutSeconds());
       protoRuntimeEnvConfigBuilder.setEagerInstall(runtimeEnvConfig.getEagerInstall());
