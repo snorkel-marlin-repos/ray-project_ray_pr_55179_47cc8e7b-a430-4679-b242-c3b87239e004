@@ -13,14 +13,11 @@
 // limitations under the License.
 
 #pragma once
-#include <boost/asio.hpp>
 #include <memory>
 #include <utility>
 
-#include "ray/common/asio/instrumented_io_context.h"
 #include "ray/common/runtime_env_manager.h"
-#include "ray/gcs/gcs_server/grpc_service_interfaces.h"
-
+#include "ray/rpc/gcs/gcs_rpc_server.h"
 namespace ray {
 namespace gcs {
 
@@ -28,7 +25,7 @@ typedef std::function<std::shared_ptr<boost::asio::deadline_timer>(std::function
                                                                    uint32_t delay_ms)>
     DelayExecutorFn;
 
-class RuntimeEnvHandler : public rpc::RuntimeEnvGcsServiceHandler {
+class RuntimeEnvHandler : public rpc::RuntimeEnvHandler {
  public:
   RuntimeEnvHandler(instrumented_io_context &io_service,
                     RuntimeEnvManager &runtime_env_manager,

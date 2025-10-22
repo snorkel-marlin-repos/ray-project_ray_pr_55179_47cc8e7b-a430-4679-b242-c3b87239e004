@@ -174,6 +174,7 @@ struct Mocker {
                                   bundles,
                                   strategy,
                                   /* is_detached */ false,
+                                  /* max_cpu_fraction_per_node */ 1.0,
                                   /* soft_target_node_id */ NodeID::Nil(),
                                   job_id,
                                   actor_id,

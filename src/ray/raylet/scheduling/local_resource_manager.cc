@@ -24,7 +24,6 @@
 
 #include "ray/common/grpc_util.h"
 #include "ray/common/ray_config.h"
-#include "ray/stats/metric_defs.h"
 
 namespace ray {
 
@@ -305,10 +304,6 @@ double LocalResourceManager::GetLocalAvailableCpus() const {
 void LocalResourceManager::PopulateResourceViewSyncMessage(
     syncer::ResourceViewSyncMessage &resource_view_sync_message) const {
   NodeResources resources = ToNodeResources();
-
-  // Populate node labels.
-  resource_view_sync_message.mutable_labels()->insert(resources.labels.begin(),
-                                                      resources.labels.end());
 
   auto total = resources.total.GetResourceMap();
   resource_view_sync_message.mutable_resources_total()->insert(total.begin(),

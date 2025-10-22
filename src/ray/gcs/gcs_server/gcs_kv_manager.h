@@ -22,7 +22,7 @@
 #include "ray/common/asio/instrumented_io_context.h"
 #include "ray/common/asio/postable.h"
 #include "ray/common/status.h"
-#include "ray/gcs/gcs_server/grpc_service_interfaces.h"
+#include "ray/rpc/gcs/gcs_rpc_server.h"
 
 namespace ray {
 namespace gcs {
@@ -100,7 +100,8 @@ class InternalKVInterface {
   virtual ~InternalKVInterface() = default;
 };
 
-class GcsInternalKVManager : public rpc::InternalKVGcsServiceHandler {
+/// This implementation class of `InternalKVHandler`.
+class GcsInternalKVManager : public rpc::InternalKVHandler {
  public:
   explicit GcsInternalKVManager(std::unique_ptr<InternalKVInterface> kv_instance,
                                 std::string raylet_config_list,

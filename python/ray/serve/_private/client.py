@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import random
 import time
@@ -81,30 +80,17 @@ class ServeControllerClient:
     def __reduce__(self):
         raise RayServeException(("Ray Serve client cannot be serialized."))
 
-    def shutdown_cached_handles(self):
+    def shutdown_cached_handles(self, _skip_asyncio_check: bool = False):
         """Shuts down all cached handles.
 
         Remove the reference to the cached handles so that they can be
         garbage collected.
         """
         for cache_key in list(self.handle_cache):
-            self.handle_cache[cache_key].shutdown()
+            self.handle_cache[cache_key].shutdown(
+                _skip_asyncio_check=_skip_asyncio_check
+            )
             del self.handle_cache[cache_key]
-
-    async def shutdown_cached_handles_async(self):
-        """Shuts down all cached handles asynchronously.
-
-        Remove the reference to the cached handles so that they can be
-        garbage collected.
-        """
-
-        async def shutdown_task(cache_key):
-            await self.handle_cache[cache_key].shutdown_async()
-            del self.handle_cache[cache_key]
-
-        await asyncio.gather(
-            *[shutdown_task(cache_key) for cache_key in list(self.handle_cache)]
-        )
 
     def shutdown(self, timeout_s: float = 30.0) -> None:
         """Completely shut down the connected Serve instance.
@@ -117,29 +103,6 @@ class ServeControllerClient:
         if ray.is_initialized() and not self._shutdown:
             try:
                 ray.get(self._controller.graceful_shutdown.remote(), timeout=timeout_s)
-            except ray.exceptions.RayActorError:
-                # Controller has been shut down.
-                pass
-            except TimeoutError:
-                logger.warning(
-                    f"Controller failed to shut down within {timeout_s}s. "
-                    "Check controller logs for more details."
-                )
-            self._shutdown = True
-
-    async def shutdown_async(self, timeout_s: float = 30.0) -> None:
-        """Completely shut down the connected Serve instance.
-
-        Shuts down all processes and deletes all state associated with the
-        instance.
-        """
-        await self.shutdown_cached_handles_async()
-
-        if ray.is_initialized() and not self._shutdown:
-            try:
-                await asyncio.wait_for(
-                    self._controller.graceful_shutdown.remote(), timeout=timeout_s
-                )
             except ray.exceptions.RayActorError:
                 # Controller has been shut down.
                 pass

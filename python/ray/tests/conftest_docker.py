@@ -221,16 +221,7 @@ def podman_docker_cluster():
         "-f",
         "/dev/null",
     ]
-    try:
-        container_id = subprocess.check_output(
-            start_container_command, stderr=subprocess.STDOUT
-        ).decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        error_output = e.output.decode("utf-8") if e.output else "No output"
-        print(f"Command failed with return code {e.returncode}")
-        print(f"Full error output:\n{error_output}")
-        raise
-
+    container_id = subprocess.check_output(start_container_command).decode("utf-8")
     container_id = container_id.strip()
 
     # Get group id that owns the docker socket file. Add user `ray` to

@@ -109,6 +109,9 @@ class ServerCall {
   /// Get the state of this `ServerCall`.
   virtual ServerCallState GetState() const = 0;
 
+  /// Set state of this `ServerCall`.
+  virtual void SetState(const ServerCallState &new_state) = 0;
+
   /// Handle the requst. This is the callback function to be called by
   /// `GrpcServer` when the request is received.
   virtual void HandleRequest() = 0;
@@ -198,7 +201,11 @@ class ServerCallImpl : public ServerCall {
     }
   }
 
+  ~ServerCallImpl() override = default;
+
   ServerCallState GetState() const override { return state_; }
+
+  void SetState(const ServerCallState &new_state) override { state_ = new_state; }
 
   void HandleRequest() override {
     stats_handle_ = io_service_.stats().RecordStart(call_name_);
@@ -255,12 +262,15 @@ class ServerCallImpl : public ServerCall {
       }
     }
     state_ = ServerCallState::PROCESSING;
-    if (factory_.GetMaxActiveRPCs() == -1) {
+    // NOTE(hchen): This `factory` local variable is needed. Because `SendReply` runs in
+    // a different thread, and will cause `this` to be deleted.
+    const auto &factory = factory_;
+    if (factory.GetMaxActiveRPCs() == -1) {
       // Create a new `ServerCall` to accept the next incoming request.
       // We create this before handling the request only when no back pressure limit is
       // set. So that the it can be populated by the completion queue in the background if
       // a new request comes in.
-      factory_.CreateCall();
+      factory.CreateCall();
     }
     if (!auth_success) {
       boost::asio::post(GetServerCallExecutor(), [this]() {

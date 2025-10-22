@@ -17,7 +17,6 @@ syntax = "proto3";
 package ray.rpc;
 
 import "src/ray/protobuf/runtime_env_common.proto";
-import "src/ray/protobuf/public/runtime_environment.proto";
 
 enum AgentRpcStatus {
   // OK.

@@ -72,6 +72,7 @@ void GcsPlacementGroupScheduler::ScheduleUnplacedBundles(
   auto scheduling_options =
       CreateSchedulingOptions(placement_group->GetPlacementGroupID(),
                               strategy,
+                              placement_group->GetMaxCpuFractionPerNode(),
                               placement_group->GetSoftTargetNodeID());
   auto scheduling_result =
       cluster_resource_scheduler_.Schedule(resource_request_list, scheduling_options);
@@ -474,20 +475,22 @@ GcsPlacementGroupScheduler::CreateSchedulingContext(
 SchedulingOptions GcsPlacementGroupScheduler::CreateSchedulingOptions(
     const PlacementGroupID &placement_group_id,
     rpc::PlacementStrategy strategy,
+    double max_cpu_fraction_per_node,
     NodeID soft_target_node_id) {
   switch (strategy) {
   case rpc::PlacementStrategy::PACK:
-    return SchedulingOptions::BundlePack();
+    return SchedulingOptions::BundlePack(max_cpu_fraction_per_node);
   case rpc::PlacementStrategy::SPREAD:
-    return SchedulingOptions::BundleSpread();
+    return SchedulingOptions::BundleSpread(max_cpu_fraction_per_node);
   case rpc::PlacementStrategy::STRICT_PACK:
     return SchedulingOptions::BundleStrictPack(
+        max_cpu_fraction_per_node,
         soft_target_node_id.IsNil() ? scheduling::NodeID::Nil()
                                     : scheduling::NodeID(soft_target_node_id.Binary()));
 
   case rpc::PlacementStrategy::STRICT_SPREAD:
     return SchedulingOptions::BundleStrictSpread(
-        CreateSchedulingContext(placement_group_id));
+        max_cpu_fraction_per_node, CreateSchedulingContext(placement_group_id));
   default:
     RAY_LOG(FATAL) << "Unsupported scheduling type: "
                    << rpc::PlacementStrategy_Name(strategy);

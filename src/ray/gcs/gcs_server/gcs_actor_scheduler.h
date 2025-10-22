@@ -27,7 +27,6 @@
 #include "ray/common/id.h"
 #include "ray/common/scheduling/scheduling_ids.h"
 #include "ray/common/task/task_spec.h"
-#include "ray/gcs/gcs_server/gcs_actor.h"
 #include "ray/gcs/gcs_server/gcs_node_manager.h"
 #include "ray/gcs/gcs_server/gcs_table_storage.h"
 #include "ray/raylet/scheduling/cluster_task_manager.h"
@@ -41,6 +40,8 @@
 namespace ray {
 using raylet::ClusterTaskManager;
 namespace gcs {
+
+class GcsActor;
 
 using GcsActorSchedulerFailureCallback =
     std::function<void(std::shared_ptr<GcsActor>,
